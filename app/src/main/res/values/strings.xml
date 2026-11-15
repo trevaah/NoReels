@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">NoReels</string>
+    <string name="service_description">Automatically taps the Instagram Home tab whenever the Reels tab is selected.</string>
+</resources>
