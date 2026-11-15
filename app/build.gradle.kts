@@ -11,13 +11,26 @@ android {
         applicationId = "com.example.noreels"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 3
+        versionName = "3.0"
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("noreels.keystore")
+            storePassword = "noreels123"
+            keyAlias = "noreels_key"
+            keyPassword = "noreels123"
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

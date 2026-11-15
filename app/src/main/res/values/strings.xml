@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">NoReels</string>
-    <string name="service_description">Redirects Instagram Reels to Home, tracks activations, and blocks X (Twitter) during scheduled Google Calendar events.</string>
+    <string name="service_description">Supports two separate modes: blocking Instagram Reels always, or blocking both Instagram Reels and X during scheduled Google Calendar events.</string>
 </resources>

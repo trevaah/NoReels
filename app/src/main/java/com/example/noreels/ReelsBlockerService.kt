@@ -23,16 +23,27 @@ class ReelsBlockerService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
+        val prefs = getSharedPreferences("NoReelsPrefs", Context.MODE_PRIVATE)
+        val toggleReelsAlways = prefs.getBoolean("toggle_reels_always", true)
+        val toggleBothCalendar = prefs.getBoolean("toggle_both_calendar", true)
+
+        if (!toggleReelsAlways && !toggleBothCalendar) return
+
+        val now = System.currentTimeMillis()
 
         if (pkg == "com.twitter.android") {
-            handleTwitterLaunch()
+            if (toggleBothCalendar) {
+                handleTwitterLaunch(now)
+            }
             return
         }
 
         if (pkg == "com.instagram.android") {
+            val shouldCheckReels = toggleReelsAlways || (toggleBothCalendar && getActiveCalendarEventTitle(now) != null)
+            if (!shouldCheckReels) return
+
             val rootNode = rootInActiveWindow ?: return
             if (isReelsTabSelected(rootNode)) {
-                val now = System.currentTimeMillis()
                 if (now - lastReelsRedirectTime > 700) {
                     lastReelsRedirectTime = now
                     incrementCounter("reels_count")
@@ -44,16 +55,13 @@ class ReelsBlockerService : AccessibilityService() {
         }
     }
 
-    private fun handleTwitterLaunch() {
-        val now = System.currentTimeMillis()
-        // 1500ms cooldown so it doesn't double-count while navigating home
+    private fun handleTwitterLaunch(now: Long) {
         if (now - lastXBlockTime < 1500) return
 
         val activeEventTitle = getActiveCalendarEventTitle(now)
         if (activeEventTitle != null) {
             lastXBlockTime = now
             incrementCounter("x_block_count")
-            // Kick user back to Android Home Screen immediately
             performGlobalAction(GLOBAL_ACTION_HOME)
             Handler(Looper.getMainLooper()).post {
                 Toast.makeText(
@@ -81,7 +89,6 @@ class ReelsBlockerService : AccessibilityService() {
             CalendarContract.Instances.SELF_ATTENDEE_STATUS
         )
 
-        // Check active timed events (ignores all-day banners like holidays/birthdays and declined events)
         val selection = "${CalendarContract.Instances.BEGIN} <= ? AND " +
                         "${CalendarContract.Instances.END} >= ? AND " +
                         "${CalendarContract.Instances.ALL_DAY} = 0 AND " +
